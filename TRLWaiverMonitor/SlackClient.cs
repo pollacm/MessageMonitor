@@ -18,8 +18,7 @@ namespace TRLWaiverMonitor
 
         public SlackClient()
         {
-            //var accessToken = new AccessToken().GetAccessTokenFromFile();
-            var accessToken = "BD7K0Q2LT/yRb4nC4NEG1aAwkKYqE2Q4hh";
+            var accessToken = new AccessToken().GetAccessTokenFromFile();
             string urlWithAccessToken = $"https://hooks.slack.com/services/TD7MEBAD8/{accessToken}";
 
             _uri = new Uri(urlWithAccessToken);

@@ -15,13 +15,18 @@ namespace TRLWaiverMonitor
         public string BottomPlayerInfo { get; set; }
         public PlayerAction BottomPlayerAction { get; set; }
         public string Team { get; set; }
-        public string Time { get; set; }
+        public DateTime Time { get; set; }
 
         public enum PlayerAction
         {
             Added,
             Dropped,
             Trade
+        }
+
+        public override string ToString()
+        {
+            return $"{BottomPlayerAction}: {BottomPlayerName} - {BottomPlayerInfo} \n {TopPlayerAction}: {TopPlayerName} - {TopPlayerInfo} FROM {Team} At {Time.AddHours(3)}";
         }
     }
 }

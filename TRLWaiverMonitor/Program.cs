@@ -89,7 +89,7 @@ namespace TRLWaiverMonitor
                 if (waivers.Any())
                 {
                     var slackString = new StringBuilder();
-                    slackString.Append($"*************************\n{DateTime.Now}\n*************************");
+                    slackString.Append($"*************************\n{DateTime.Now}\n*************************\n");
                     foreach (var waiver in waivers)
                     {
                         slackString.Append(waiver);

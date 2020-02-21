@@ -61,7 +61,7 @@ namespace TRLWaiverMonitor
             ProcessComments();
 
             var currentTime = DateTime.Now;
-            var lastHour = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, 0, 0).AddHours(-12);
+            var lastHour = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, 0, 0).AddHours(-1);
             var lastHourOfComments = commentsFromPage.Where(c => c.StartingTimeSlot > lastHour);
             if (lastHourOfComments.Any())
             {

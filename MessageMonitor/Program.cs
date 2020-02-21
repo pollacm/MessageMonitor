@@ -61,8 +61,9 @@ namespace TRLWaiverMonitor
             ProcessComments();
 
             var currentTime = DateTime.Now;
+            var commentRepo = new CommentRepo();
             var lastHour = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, 0, 0).AddHours(-1);
-            var lastHourOfComments = commentsFromPage.Where(c => c.StartingTimeSlot > lastHour);
+            var lastHourOfComments = commentRepo.GetComments().Where(c => c.StartingTimeSlot > lastHour);
             if (lastHourOfComments.Any())
             {
                 var slackString = new StringBuilder();
@@ -70,7 +71,6 @@ namespace TRLWaiverMonitor
                 foreach (var lastHourOfComment in lastHourOfComments)
                 {
                     slackString.Append(Extensions.WriteComment(lastHourOfComment));
-                    slackString.Append("\n\n");
                 }
 
                 new SlackClient().PostMessage(slackString.ToString());

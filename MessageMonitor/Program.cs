@@ -61,7 +61,7 @@ namespace TRLWaiverMonitor
             ProcessComments();
 
             var currentTime = DateTime.Now;
-            var lastHour = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, 0, 0).AddHours(-1);
+            var lastHour = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, 0, 0).AddHours(-12);
             var lastHourOfComments = commentsFromPage.Where(c => c.StartingTimeSlot > lastHour);
             if (lastHourOfComments.Any())
             {
@@ -185,55 +185,6 @@ namespace TRLWaiverMonitor
             }
 
             return messageType;
-        }
-
-        private static void ScrollToBottom(ChromeDriver driver)
-        {
-            var jse = (IJavaScriptExecutor)driver;
-            jse.ExecuteScript("scroll(0, 100000);");
-        }
-
-        static void ExecuteCommand(string command)
-        {
-            int exitCode;
-            ProcessStartInfo processInfo;
-            Process process;
-
-            processInfo = new ProcessStartInfo("cmd.exe", "/c " + command);
-            processInfo.CreateNoWindow = true;
-            processInfo.UseShellExecute = false;
-            // *** Redirect the output ***
-            processInfo.RedirectStandardError = true;
-            processInfo.RedirectStandardOutput = true;
-
-            process = Process.Start(processInfo);
-            process.WaitForExit();
-
-            // *** Read the streams ***
-            // Warning: This approach can lead to deadlocks, see Edit #2
-            string output = process.StandardOutput.ReadToEnd();
-            string error = process.StandardError.ReadToEnd();
-
-            exitCode = process.ExitCode;
-
-            Console.WriteLine("output>>" + (String.IsNullOrEmpty(output) ? "(none)" : output));
-            Console.WriteLine("error>>" + (String.IsNullOrEmpty(error) ? "(none)" : error));
-            Console.WriteLine("ExitCode: " + exitCode.ToString(), "ExecuteCommand");
-            process.Close();
-        }
-
-        private static Waiver.PlayerAction GetAction(string actionClass)
-        {
-            if (actionClass.Contains("F-positive"))
-            {
-                return Waiver.PlayerAction.Added;
-            }
-            if (actionClass.Contains("F-negative"))
-            {
-                return Waiver.PlayerAction.Dropped;
-            }
-
-            return Waiver.PlayerAction.Trade;
         }
     }
 }

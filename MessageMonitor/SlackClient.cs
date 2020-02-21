@@ -25,7 +25,7 @@ namespace TRLWaiverMonitor
         }
 
         //Post a message using simple strings
-        public void PostMessage(string text, string username = "trl_monitor", string channel = "#general")
+        public void PostMessage(string text, string username = "trl_monitor", string channel = "#youtube-comments")
         {
             Payload payload = new Payload()
             {

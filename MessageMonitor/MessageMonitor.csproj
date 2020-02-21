@@ -98,6 +98,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Comments.txt" />
     <Content Include="LastTimeRun.txt" />
   </ItemGroup>
   <ItemGroup>

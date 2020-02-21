@@ -12,6 +12,7 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 using System.Collections.ObjectModel;
 using YoutubeSubscriberManager.Comment;
+using Extensions = TubeBuddyScraper.Extensions;
 
 namespace TRLWaiverMonitor
 {
@@ -38,9 +39,8 @@ namespace TRLWaiverMonitor
 
             ChromeDriver driver = new ChromeDriver(options);
             Console.Title = "MessageMonitor";
-            
 
-            driver.NavigateToUrl("https:/studio.youtube.com/channel/UCUDTfpBksfE4KqLYjG9u00g/comments/inbox?utm_campaign=upgrade&utm_medium=redirect&utm_source=%2Fcomments&filter=%5B%5D");
+            driver.NavigateToUrl("https://studio.youtube.com/channel/UCUDTfpBksfE4KqLYjG9u00g/comments/inbox?filter=%5B%5D");
             SelectElement selectBox = new SelectElement(driver.FindElementByXPath("//ytcp-comments-filter[@id='filter-bar']//select[@class='tb-comment-filter-studio-select-auto-load tb-comment-filter-studio-select']"));
             selectBox.SelectByText("100 results");
             var button = driver.FindElementByXPath("//ytcp-comments-filter[@id='filter-bar']//button[@class='tb-btn tb-btn-grey tb-comment-filter-studio-go'][contains(text(),'Go')]");
@@ -48,23 +48,28 @@ namespace TRLWaiverMonitor
             Thread.Sleep(10000);
 
             var messages = driver.FindElementsByXPath("//body//ytcp-comment-thread");
-            ProcessComments(messages);
+            LoadComments(messages);
 
-            driver.NavigateToUrl("https://studio.youtube.com/channel/UCUDTfpBksfE4KqLYjG9u00g/comments/spam?utm_campaign=upgrade&utm_medium=redirect&utm_source=%2Fcomments&filter=%5B%5D");
+            driver.NavigateToUrl("https://studio.youtube.com/channel/UCUDTfpBksfE4KqLYjG9u00g/comments/spam");
             Thread.Sleep(3000);
-            ScrollToBottom(driver);
-            Thread.Sleep(3000);
+            //ScrollToBottom(driver);
+            //Thread.Sleep(3000);
 
             messages = driver.FindElementsByXPath("//body//ytcp-comment-thread");
-            ProcessComments(messages);
+            LoadComments(messages);
             
-            if (messages.Any())
+            ProcessComments();
+
+            var currentTime = DateTime.Now;
+            var lastHour = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, 0, 0).AddHours(-1);
+            var lastHourOfComments = commentsFromPage.Where(c => c.StartingTimeSlot > lastHour);
+            if (lastHourOfComments.Any())
             {
                 var slackString = new StringBuilder();
                 slackString.Append($"*************************\n{DateTime.Now}\n*************************\n");
-                foreach (var message in messages)
+                foreach (var lastHourOfComment in lastHourOfComments)
                 {
-                    slackString.Append(message);
+                    slackString.Append(Extensions.WriteComment(lastHourOfComment));
                     slackString.Append("\n\n");
                 }
 
@@ -75,7 +80,7 @@ namespace TRLWaiverMonitor
             driver.Quit();
         }
 
-        private static void ProcessComments(ReadOnlyCollection<IWebElement> comments)
+        private static void LoadComments(ReadOnlyCollection<IWebElement> comments)
         {
             foreach (var comment in comments)
             {
@@ -92,30 +97,47 @@ namespace TRLWaiverMonitor
 
                     var watchTimeAmount = comment.FindElement(By.XPath("./ytcp-comment[1]/div[1]/div[1]/div[2]/div[1]/yt-formatted-string[1]")).Text;
                     //break if comment is already saved
-                    if (watchTimeAmount.Contains("days") || watchTimeAmount.Contains("weeks"))
+                    if (watchTimeAmount.Contains("day") || watchTimeAmount.Contains("week"))
                     {
                         break;
                     }
 
-                    if (watchTimeAmount.Contains("seconds"))
+                    var hoursSet = false;
+                    if (watchTimeAmount.Contains("hour"))
+                    {
+                        hoursSet = true;
+                    }
+
+                    if (watchTimeAmount.Contains("second"))
                     {
                         watchTimeAmount = "1 minute";
                     }
 
-                    var watchTimeInMinutes = int.Parse(watchTimeAmount.Split(' ')[0]);
+                    var watchTimeInMinutesOrHours = int.Parse(watchTimeAmount.Split(' ')[0]);
 
-                    if (watchTimeInMinutes > 5)
-                        break;
+                    //if (watchTimeInMinutesOrHours > 5 && hoursSet)
+                    //    break;
 
                     var currentTime = DateTime.Now;
-                    message.Time = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, currentTime.Minute - watchTimeInMinutes, 0);
-                    message.StartingTimeSlot = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, 0, 0);
-                    message.EndingTimeSlot = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour + 1, 0, 0);
+                    if (!hoursSet)
+                    {
+                        message.Time = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, currentTime.Minute, 0).AddMinutes(-watchTimeInMinutesOrHours);
+                        message.StartingTimeSlot = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, 0, 0);
+                        message.EndingTimeSlot = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, 0, 0).AddHours(1);
+                    }
+                    else
+                    {
+                        message.StartingTimeSlot = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, currentTime.Minute, 0).AddHours(-watchTimeInMinutesOrHours);
+                        message.EndingTimeSlot = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, currentTime.Minute, 0).AddHours(-watchTimeInMinutesOrHours + 1);
+                    }
 
                     commentsFromPage.Add(message);
                 }
             }
+        }
 
+        private static void ProcessComments()
+        {
             var commentRepo = new CommentRepo();
             var oldComments = commentRepo.GetEligableVideosUpdateOfMessengers();
             foreach (var oldComment in oldComments)
@@ -127,8 +149,10 @@ namespace TRLWaiverMonitor
                 commentRepo.SetMatchingCommenterNamesForTimeSlot(commentsFromPage, commentFromPage);
             }
 
-            commentsFromPage.AddRange(oldComments);
-            commentRepo.RefreshComments(commentsFromPage);
+            var commentsGatheredFromPage = commentsFromPage;
+
+            commentsGatheredFromPage.AddRange(oldComments);
+            commentRepo.RefreshComments(commentsGatheredFromPage);
         }
 
         private static Comment.ListTypeEnum GetSubscriberType(string name)

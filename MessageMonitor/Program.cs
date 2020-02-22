@@ -89,7 +89,8 @@ namespace TRLWaiverMonitor
                     var commenterName = comment.FindElement(By.XPath("./ytcp-comment[@id='comment']//yt-formatted-string[@class='author-text style-scope ytcp-comment']")).Text;
                     var message = new Comment();
                     message.MessengerName = commenterName;
-
+                    if (commenterName == string.Empty)
+                        continue;
                     var videoName = comment.FindElement(By.XPath("./ytcp-comment[@id='comment']//div//ytcp-comment-video-thumbnail//a//yt-formatted-string")).Text;
                     message.VideoName = videoName;
                     message.Message = comment.FindElement(By.XPath("./ytcp-comment[@id='comment']//div//div[@id='content']//ytcp-comment-expander//div//yt-formatted-string")).Text;

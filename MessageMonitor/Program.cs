@@ -59,7 +59,7 @@ namespace TRLWaiverMonitor
             LoadComments(messages);
             
             ProcessComments();
-
+            
             var currentTime = DateTime.Now;
             var commentRepo = new CommentRepo();
             var lastHour = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, 0, 0).AddHours(-1);
@@ -102,10 +102,10 @@ namespace TRLWaiverMonitor
                         break;
                     }
 
-                    var hoursSet = false;
-                    if (watchTimeAmount.Contains("hour"))
+                    var minutesSet = false;
+                    if (watchTimeAmount.Contains("second") || watchTimeAmount.Contains("minute"))
                     {
-                        hoursSet = true;
+                        minutesSet = true;
                     }
 
                     if (watchTimeAmount.Contains("second"))
@@ -115,11 +115,11 @@ namespace TRLWaiverMonitor
 
                     var watchTimeInMinutesOrHours = int.Parse(watchTimeAmount.Split(' ')[0]);
 
-                    //if (watchTimeInMinutesOrHours > 5 && hoursSet)
-                    //    break;
+                    if (watchTimeInMinutesOrHours > 5 && !minutesSet)
+                        break;
 
                     var currentTime = DateTime.Now;
-                    if (!hoursSet)
+                    if (minutesSet)
                     {
                         message.Time = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, currentTime.Minute, 0).AddMinutes(-watchTimeInMinutesOrHours);
                         message.StartingTimeSlot = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, 0, 0);

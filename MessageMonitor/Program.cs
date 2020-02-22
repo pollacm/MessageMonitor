@@ -63,7 +63,7 @@ namespace TRLWaiverMonitor
             var currentTime = DateTime.Now;
             var commentRepo = new CommentRepo();
             var lastHour = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, 0, 0).AddHours(-1);
-            var lastHourOfComments = commentRepo.GetComments().Where(c => c.StartingTimeSlot > lastHour);
+            var lastHourOfComments = commentRepo.GetComments().Where(c => (c.Time.HasValue && c.Time >= lastHour) || c.StartingTimeSlot >= lastHour);
             if (lastHourOfComments.Any())
             {
                 var slackString = new StringBuilder();

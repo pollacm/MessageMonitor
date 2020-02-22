@@ -42,7 +42,7 @@ namespace TRLWaiverMonitor
 
             driver.NavigateToUrl("https://studio.youtube.com/channel/UCUDTfpBksfE4KqLYjG9u00g/comments/inbox?filter=%5B%5D");
             SelectElement selectBox = new SelectElement(driver.FindElementByXPath("//ytcp-comments-filter[@id='filter-bar']//select[@class='tb-comment-filter-studio-select-auto-load tb-comment-filter-studio-select']"));
-            selectBox.SelectByText("100 results");
+            selectBox.SelectByText("50 results");
             var button = driver.FindElementByXPath("//ytcp-comments-filter[@id='filter-bar']//button[@class='tb-btn tb-btn-grey tb-comment-filter-studio-go'][contains(text(),'Go')]");
             button.Click();
             Thread.Sleep(10000);
